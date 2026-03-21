@@ -115,3 +115,4 @@ Open `http://localhost:3000`.
 - In this local environment, `npm` is currently misconfigured, so lint verification could not be completed during inspection.
 # smart_attendance_tracking_system
 # smart_attendance_tracking_system
+# smart_attendance_tracking_system
