@@ -1,62 +1,102 @@
-# SATS — Smart Attendance Tracking System (V1)
+# SATS - Smart Attendance Tracking System
 
-Mobile-first attendance system:
-- **Professor** logs in (Supabase Auth) and manages **Courses → Sections → Sessions**
-- **Student** (no login) scans a **QR code**, shares location, and checks in
+SATS is a mobile-first classroom attendance system.
 
-## Tech
-- Next.js (App Router, Server Actions, TypeScript)
-- Supabase (Auth + Postgres)
+- Professors sign in with Supabase Auth and manage courses, sections, students, and sessions.
+- Students do not sign in. They scan a QR code, share location, and submit attendance for a class session.
+
+For the fuller project specification, see [SPECS.md](C:\Users\MSI\OneDrive\Desktop\SAD_project\sats\SPECS.md).
+
+## Current Stack
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- Supabase Auth + Postgres
 - Prisma
-- Tailwind CSS + shadcn/ui
-- QR generator + scanner
+- shadcn/base-ui style components
+- QR token and scan flow
 - Browser Geolocation API
 
-## Routes
-- **Public**: `/scan/[sessionId]`
-- **Protected (Professor)**: `/dashboard`, `/courses`, `/sections`, `/sections/[id]`, `/sessions/[id]`
+## Current Routes
 
-## Supabase setup (required)
+### Public
+- `/`
+- `/login`
+- `/register`
+- `/scan/[sessionId]`
+- `/api/sessions/[id]/qr`
+- `/logout`
 
-### 1) Create project
-Create a Supabase project (Postgres + Auth).
+### Protected Professor Routes
+- `/dashboard`
+- `/courses`
+- `/sections`
+- `/sections/[id]`
+- `/sessions/[id]`
 
-### 2) Auth settings
-- Enable **Email/Password** provider.
-- Recommended for V1: **disable public signups** (so only your seeded professors can use it).
+## Current Features
 
-### 3) Database schema (match ERD)
-Create tables exactly as in the ERD:
-`PROFESSOR`, `COURSE`, `SECTION`, `CLASSSESSION`, `STUDENT`, `ENROLLMENT`, `ATTENDANCERECORD`
+### Professor
+- Sign in with Supabase Auth
+- Access protected dashboard
+- Create, edit, and delete courses
+- Create and delete sections
+- Manage section detail workspace
+- Create and delete class sessions
+- Enroll students manually
+- Import students from roster data
+- View attendance records for a session
+- Generate and display session QR code
 
-Add constraints from the ERD:
-- `COURSE.course_code` UNIQUE
-- `PROFESSOR.email` UNIQUE
-- `STUDENT.email` UNIQUE (nullable)
-- `STUDENT.student_number` UNIQUE
-- `ENROLLMENT` UNIQUE(`section_id`, `student_id`)
-- `ATTENDANCERECORD` UNIQUE(`session_id`, `student_id`)
+### Student
+- Open attendance page from QR/session link
+- Enter student details
+- Share current location
+- Submit attendance check-in
 
-### 4) Seed professors (required)
-This app links the logged-in user to `PROFESSOR` **by email**.
+## Auth and Access
+- Professor routes are protected by middleware.
+- A signed-in user must have a matching row in the `PROFESSOR` table by email.
+- Registration is intentionally disabled in the app UI.
+- Student attendance does not require login.
+- Privileged professor operations run server-side and must keep the Supabase service role key private.
 
-Before logging in, insert rows into `PROFESSOR` and ensure:
-- `PROFESSOR.email` matches the Supabase Auth email exactly
+## Database Model
+The current Prisma schema includes:
+- `PROFESSOR`
+- `COURSE`
+- `SECTION`
+- `STUDENT`
+- `ENROLLMENT`
+- `CLASSSESSION`
+- `ATTENDANCERECORD`
 
-### 5) RLS (Row Level Security)
-V1 recommended approach (simple + reliable):
-- Keep RLS strict or off for these tables and use **server-only** access for professor actions.
-- Never expose the service role key to the browser.
+Important constraints:
+- Unique professor email
+- Unique course code
+- Unique student number
+- Unique optional student email
+- Unique enrollment per section and student
+- Unique attendance record per session and student
 
-If you want stricter security later, we can enable RLS and write policies that restrict access via the logged-in email → professor → section ownership.
+## Environment Variables
+Create `.env.local` with:
 
-## Environment variables
-Create `.env.local` in this folder:
-- `NEXT_PUBLIC_SUPABASE_URL=...`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY=...`
-- `SUPABASE_SERVICE_ROLE_KEY=...` (server-only)
-- `DATABASE_URL=...` (Supabase connection string for Prisma)
-- `QR_TOKEN_SECRET=...` (server-only)
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+DATABASE_URL=...
+QR_TOKEN_SECRET=...
+```
+
+## Supabase Setup
+1. Create a Supabase project with Auth and Postgres.
+2. Enable Email/Password sign-in.
+3. Create the database tables used by the Prisma schema.
+4. Seed professor rows so the professor email matches the Supabase Auth email exactly.
+5. Keep service-role access server-only.
 
 ## Development
 
@@ -66,3 +106,11 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+## Notes
+- The app currently uses a blue-slate UI theme with a darker navy primary.
+- Tables use transparent rows with hover state retained.
+- Active navigation matches the main button primary color.
+- A reusable SATS logo component is used in the landing page and professor header.
+- In this local environment, `npm` is currently misconfigured, so lint verification could not be completed during inspection.
+# smart_attendance_tracking_system
