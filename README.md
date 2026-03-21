@@ -117,3 +117,4 @@ Open `http://localhost:3000`.
 # smart_attendance_tracking_system
 # smart_attendance_tracking_system
 # sats
+# sats
