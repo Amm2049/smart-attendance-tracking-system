@@ -131,13 +131,18 @@ export function ScanClient({
         startTransition(async () => {
           try {
             setSubmitError(null);
-            await submitAttendance({
+            const result = await submitAttendance({
               sessionId,
               token,
               studentNumber: parsed.data.studentNumber,
               name: parsed.data.name,
               location,
             });
+            if (!result.ok) {
+              setSubmitError(result.message);
+              toast.error(result.message);
+              return;
+            }
             toast.success("Attendance recorded.");
             // Lock this browser from re-submitting for this session
             localStorage.setItem(getCheckinKey(sessionId), "1");
