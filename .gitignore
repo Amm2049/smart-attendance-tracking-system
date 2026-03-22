@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+.vscode/
 
 # debug
 npm-debug.log*
@@ -36,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma

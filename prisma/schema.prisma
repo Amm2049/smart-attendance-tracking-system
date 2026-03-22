@@ -1,0 +1,120 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Professor {
+  professor_id Int     @id @default(autoincrement())
+  name         String
+  email        String  @unique
+  department   String
+
+  sections Section[]
+
+  @@map("PROFESSOR")
+}
+
+model Course {
+  course_id    Int     @id @default(autoincrement())
+  course_code  String  @unique
+  title        String
+
+  sections Section[]
+
+  @@map("COURSE")
+}
+
+model Section {
+  section_id       Int     @id @default(autoincrement())
+  course_id        Int
+  professor_id     Int
+  term             String
+  section          String
+  schedule         String
+  room             String?
+  classroom_lat    Float
+  classroom_lng    Float
+  allowed_radius_m Int
+
+  course    Course    @relation(fields: [course_id], references: [course_id], onDelete: Restrict)
+  professor Professor @relation(fields: [professor_id], references: [professor_id], onDelete: Restrict)
+
+  enrollments  Enrollment[]
+  classsessions ClassSession[]
+
+  @@map("SECTION")
+}
+
+model Student {
+  student_id     Int     @id @default(autoincrement())
+  name           String
+  email          String? @unique
+  student_number String  @unique
+
+  enrollments      Enrollment[]
+  attendancerecords AttendanceRecord[]
+
+  @@map("STUDENT")
+}
+
+model Enrollment {
+  enrollment_id Int      @id @default(autoincrement())
+  section_id    Int
+  student_id    Int
+  enrolled_at   DateTime
+  status        String
+
+  section Section @relation(fields: [section_id], references: [section_id], onDelete: Restrict)
+  student Student @relation(fields: [student_id], references: [student_id], onDelete: Restrict)
+
+  attendancerecords AttendanceRecord[]
+
+  @@unique([section_id, student_id])
+  @@map("ENROLLMENT")
+}
+
+model ClassSession {
+  session_id      Int      @id @default(autoincrement())
+  section_id      Int
+  session_date    DateTime @db.Date
+  start_time      DateTime @db.Time
+  end_time        DateTime @db.Time
+  created_at      DateTime
+  active_qr_nonce String?
+
+  section Section @relation(fields: [section_id], references: [section_id], onDelete: Restrict)
+
+  attendancerecords AttendanceRecord[]
+
+  @@map("CLASSSESSION")
+}
+
+model AttendanceRecord {
+  attendance_id     Int      @id @default(autoincrement())
+  session_id        Int
+  student_id        Int
+  enrollment_id     Int
+  scanned_at        DateTime
+  location_verified Boolean
+  status            String
+  checkin_token     String
+  checkin_ip        String?
+  token_issued_at   DateTime
+  token_expires_at  DateTime
+
+  classsession ClassSession @relation(fields: [session_id], references: [session_id], onDelete: Restrict)
+  student      Student      @relation(fields: [student_id], references: [student_id], onDelete: Restrict)
+  enrollment   Enrollment   @relation(fields: [enrollment_id], references: [enrollment_id], onDelete: Restrict)
+
+  @@unique([session_id, student_id])
+  @@map("ATTENDANCERECORD")
+}
