@@ -84,7 +84,7 @@ export default async function SectionDetailPage({
     .from("classsession")
     .select("session_id, session_date, start_time, end_time")
     .eq("section_id", sectionId)
-    .order("session_id", { ascending: false })
+    .order("session_id", { ascending: true })
     .returns<SessionRow[]>();
   if (sessionsErr) throw new Error(sessionsErr.message);
 
@@ -150,22 +150,13 @@ export default async function SectionDetailPage({
           };
         })}
         sessions={(sessions ?? [])
-          .map((session) => ({
+          .map((session, index) => ({
             session_id: session.session_id,
             session_date: getLocalDateISO(session.session_date),
             start_time: formatTimeAmPm(session.start_time),
             end_time: formatTimeAmPm(session.end_time),
-          }))
-          .sort((a, b) => {
-            const aTime = new Date(`${a.session_date}T${a.start_time}:00`).getTime();
-            const bTime = new Date(`${b.session_date}T${b.start_time}:00`).getTime();
-            return aTime - bTime;
-          })
-          .map((session, index) => ({
-            ...session,
             classLabel: `Class ${index + 1}`,
-          }))
-          .reverse()}
+          }))}
         totalSessions={totalSessions}
       />
     </div>
