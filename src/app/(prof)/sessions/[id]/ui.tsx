@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,28 @@ export function SessionQr({ sessionId }: { sessionId: number }) {
   const [url, setUrl] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  const remainingMs = useMemo(() => {
+    if (!expiresAt) return null;
+    return new Date(expiresAt).getTime() - now;
+  }, [expiresAt, now]);
+
+  const countdownLabel = useMemo(() => {
+    if (remainingMs === null) return null;
+    if (remainingMs <= 0) return "Expired";
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }, [remainingMs]);
 
   async function generateQr() {
     if (loading) return;
@@ -58,6 +80,13 @@ export function SessionQr({ sessionId }: { sessionId: number }) {
             <>
               Expires at:{" "}
               <span className="font-mono">{new Date(expiresAt).toLocaleString()}</span>
+              {countdownLabel ? (
+                <>
+                  {" "}
+                  • Expires in{" "}
+                  <span className="font-mono">{countdownLabel}</span>
+                </>
+              ) : null}
             </>
           ) : (
             `Generate a QR only when you're ready. Each QR expires after ${QR_TTL_MINUTES} minutes.`
