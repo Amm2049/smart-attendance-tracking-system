@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { SessionQr } from "./ui";
+import { ClientDateTime } from "@/components/client-datetime";
 import {
   formatTimeAmPm,
   getLocalDateISO,
@@ -142,13 +143,13 @@ export default async function SessionPage({
 
                 return (
                   <TableRow key={record.attendance_id}>
-                    <TableCell className="font-mono">{student?.student_number}</TableCell>
-                    <TableCell>{student?.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
-                      {new Date(record.scanned_at).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                );
+                  <TableCell className="font-mono">{student?.student_number}</TableCell>
+                  <TableCell>{student?.name}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
+                    <ClientDateTime value={record.scanned_at} />
+                  </TableCell>
+                </TableRow>
+              );
               })}
               {(attendance ?? []).length === 0 && (
                 <TableRow>
