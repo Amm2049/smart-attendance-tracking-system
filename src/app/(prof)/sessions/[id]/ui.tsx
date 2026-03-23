@@ -5,15 +5,11 @@ import { QRCodeCanvas } from "qrcode.react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { QR_TTL_MINUTES } from "@/lib/qr/constants";
 
-export function SessionQr({
-  sessionId,
-  expiresAt,
-}: {
-  sessionId: number;
-  expiresAt: string;
-}) {
+export function SessionQr({ sessionId }: { sessionId: number }) {
   const [url, setUrl] = useState<string>("");
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function generateQr() {
@@ -23,8 +19,9 @@ export function SessionQr({
     try {
       const res = await fetch(`/api/sessions/${sessionId}/qr`, { cache: "no-store" });
       if (!res.ok) throw new Error(await res.text());
-      const data = (await res.json()) as { url: string };
+      const data = (await res.json()) as { url: string; expiresAt: string };
       setUrl(data.url);
+      setExpiresAt(data.expiresAt);
       toast.success("QR generated.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate QR.");
@@ -57,12 +54,13 @@ export function SessionQr({
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {url ? (
+          {url && expiresAt ? (
             <>
-              Expires at: <span className="font-mono">{new Date(expiresAt).toLocaleString()}</span>
+              Expires at:{" "}
+              <span className="font-mono">{new Date(expiresAt).toLocaleString()}</span>
             </>
           ) : (
-            "Generate a QR only when you're ready for students to scan."
+            `Generate a QR only when you're ready. Each QR expires after ${QR_TTL_MINUTES} minutes.`
           )}
         </p>
         <div className="flex justify-center rounded-xl border bg-card p-6">

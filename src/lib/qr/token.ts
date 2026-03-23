@@ -33,7 +33,15 @@ export async function signSessionToken(params: {
 }
 
 export async function verifySessionToken(token: string, expectedSessionId: number) {
-  const { payload } = await jwtVerify(token, getSecret(), { algorithms: ["HS256"] });
+  let payload: Awaited<ReturnType<typeof jwtVerify>>["payload"];
+  try {
+    ({ payload } = await jwtVerify(token, getSecret(), { algorithms: ["HS256"] }));
+  } catch (error) {
+    if (error instanceof Error && error.name === "JWTExpired") {
+      throw new Error("QR code expired. Please scan a new one.");
+    }
+    throw new Error("Invalid or expired QR code. Please scan a new one.");
+  }
 
   const sid = Number(payload.sid);
   if (!Number.isFinite(sid) || sid !== expectedSessionId) {

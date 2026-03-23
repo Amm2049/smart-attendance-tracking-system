@@ -3,11 +3,6 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { haversineDistanceMeters } from "@/lib/geo/haversine";
-import {
-  getLocalDateISO,
-  getLocalTimeHHmm,
-  parseLocalDateTime,
-} from "@/lib/datetime/local";
 import { verifySessionToken } from "@/lib/qr/token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { relFirst, type RelOne } from "@/lib/supabase/rel";
@@ -33,9 +28,6 @@ type SectionLocationRow = {
 type SessionRow = {
   session_id: number;
   section_id: number;
-  session_date: string;
-  start_time: string;
-  end_time: string;
   active_qr_nonce: string | null;
   section: RelOne<SectionLocationRow>;
 };
@@ -85,7 +77,7 @@ export async function submitAttendance(input: unknown): Promise<SubmitAttendance
     const { data: session, error: sessErr } = await admin
       .from("classsession")
       .select(
-        "session_id, section_id, session_date, start_time, end_time, active_qr_nonce, section:section_id(section_id, classroom_lat, classroom_lng, allowed_radius_m)"
+        "session_id, section_id, active_qr_nonce, section:section_id(section_id, classroom_lat, classroom_lng, allowed_radius_m)"
       )
       .eq("session_id", sessionId)
       .maybeSingle<SessionRow>();
@@ -95,22 +87,8 @@ export async function submitAttendance(input: unknown): Promise<SubmitAttendance
       throw new Error("This QR code is no longer active. Please scan the latest QR.");
     }
 
-    const dateISO = getLocalDateISO(session.session_date);
-    const start = getLocalTimeHHmm(session.start_time);
-    const end = getLocalTimeHHmm(session.end_time);
-
-    const startsAt = parseLocalDateTime(dateISO, start);
-    const endsAt = parseLocalDateTime(dateISO, end);
-    const now = new Date();
-
-    if (now < startsAt) {
-      throw new Error(
-        `Session has not started yet. Check-in opens at ${startsAt.toLocaleString()}.`
-      );
-    }
-
-    if (now > endsAt || now > verified.expiresAt) {
-      throw new Error(`Session ended at ${endsAt.toLocaleString()}.`);
+    if (new Date() > verified.expiresAt) {
+      throw new Error("QR code expired. Please scan a new one.");
     }
 
     const section = relFirst(session.section);

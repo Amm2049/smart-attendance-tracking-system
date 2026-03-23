@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireProfessor } from "@/lib/auth/require-professor";
-import {
-  getLocalDateISO,
-  getLocalTimeHHmm,
-  parseLocalDateTime,
-} from "@/lib/datetime/local";
+import { QR_TTL_MS } from "@/lib/qr/constants";
 import { signSessionToken } from "@/lib/qr/token";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { relFirst, type RelOne } from "@/lib/supabase/rel";
@@ -16,8 +12,6 @@ type SectionRow = {
 
 type SessionRow = {
   session_id: number;
-  session_date: string;
-  end_time: string;
   active_qr_nonce: string | null;
   section: RelOne<SectionRow>;
 };
@@ -36,7 +30,7 @@ export async function GET(
   const admin = createSupabaseAdminClient();
   const { data: session, error } = await admin
     .from("classsession")
-    .select("session_id, session_date, end_time, section:section_id(section_id, professor_id)")
+    .select("session_id, active_qr_nonce, section:section_id(section_id, professor_id)")
     .eq("session_id", sessionId)
     .maybeSingle<SessionRow>();
   if (error) return new NextResponse(error.message, { status: 500 });
@@ -48,14 +42,7 @@ export async function GET(
     return new NextResponse("Not found.", { status: 404 });
   }
 
-  const dateISO = getLocalDateISO(session.session_date);
-  const end = getLocalTimeHHmm(session.end_time);
-  const expiresAt = parseLocalDateTime(dateISO, end);
-  if (new Date() > expiresAt) {
-    return new NextResponse("Session expired. Update the session time or create a new session.", {
-      status: 400,
-    });
-  }
+  const expiresAt = new Date(Date.now() + QR_TTL_MS);
 
   const nonce = crypto.randomUUID();
   const { error: updateErr } = await admin
@@ -71,5 +58,5 @@ export async function GET(
   base.search = "";
   base.searchParams.set("t", token);
 
-  return NextResponse.json({ url: base.toString() });
+  return NextResponse.json({ url: base.toString(), expiresAt: expiresAt.toISOString() });
 }

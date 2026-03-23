@@ -117,7 +117,7 @@ export default async function SessionPage({
         </Link>
       </div>
 
-      <SessionQr sessionId={sessionId} expiresAt={expiresAt.toISOString()} />
+      <SessionQr sessionId={sessionId} />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
