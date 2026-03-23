@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { SessionQr } from "./ui";
 import {
+  formatTimeAmPm,
   getLocalDateISO,
   getLocalTimeHHmm,
   parseLocalDateTime,
@@ -83,6 +84,8 @@ export default async function SessionPage({
   const dateISO = getLocalDateISO(session.session_date);
   const start = getLocalTimeHHmm(session.start_time);
   const end = getLocalTimeHHmm(session.end_time);
+  const startLabel = formatTimeAmPm(session.start_time);
+  const endLabel = formatTimeAmPm(session.end_time);
 
   const expiresAt = parseLocalDateTime(dateISO, end);
   const startsAt = parseLocalDateTime(dateISO, start);
@@ -106,7 +109,7 @@ export default async function SessionPage({
             {relFirst(section.course)?.course_code ?? "Course"} - Session
           </h1>
           <p className="text-[15px] text-muted-foreground md:text-base">
-            {dateISO} {start}-{end} | {status}
+            {dateISO} {startLabel}-{endLabel} | {status}
           </p>
         </div>
         <Link

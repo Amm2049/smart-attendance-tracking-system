@@ -24,6 +24,16 @@ export function getLocalTimeHHmm(value: string | Date) {
   return match[0];
 }
 
+export function formatTimeAmPm(value: string | Date) {
+  const hhmm = getLocalTimeHHmm(value);
+  const [hours, minutes] = hhmm.split(":").map(Number);
+  const safeHours = Number.isFinite(hours) ? hours : 0;
+  const safeMinutes = Number.isFinite(minutes) ? minutes : 0;
+  const period = safeHours >= 12 ? "PM" : "AM";
+  const hour12 = safeHours % 12 === 0 ? 12 : safeHours % 12;
+  return `${hour12}:${pad2(safeMinutes)} ${period}`;
+}
+
 export function parseLocalDateTime(dateValue: string | Date, timeValue: string | Date) {
   const dateISO = getLocalDateISO(dateValue);
   const timeHHmm = getLocalTimeHHmm(timeValue);

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireProfessor } from "@/lib/auth/require-professor";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getLocalDateISO, getLocalTimeHHmm } from "@/lib/datetime/local";
+import { formatTimeAmPm, getLocalDateISO } from "@/lib/datetime/local";
 import { SectionDetailClient } from "./ui";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { relFirst, type RelOne } from "@/lib/supabase/rel";
@@ -153,8 +153,8 @@ export default async function SectionDetailPage({
           .map((session) => ({
             session_id: session.session_id,
             session_date: getLocalDateISO(session.session_date),
-            start_time: getLocalTimeHHmm(session.start_time),
-            end_time: getLocalTimeHHmm(session.end_time),
+            start_time: formatTimeAmPm(session.start_time),
+            end_time: formatTimeAmPm(session.end_time),
           }))
           .sort((a, b) => {
             const aTime = new Date(`${a.session_date}T${a.start_time}:00`).getTime();
