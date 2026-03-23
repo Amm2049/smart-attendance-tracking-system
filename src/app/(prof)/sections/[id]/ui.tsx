@@ -99,6 +99,11 @@ export function SectionDetailClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [sessionOpen, setSessionOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: number;
+    label: string;
+  } | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [sessionForm, setSessionForm] = useState({
@@ -269,16 +274,11 @@ export function SectionDetailClient({
                                 variant="destructive"
                                 disabled={pending}
                                 onClick={() => {
-                                  if (!confirm("Delete this session?")) return;
-                                  startTransition(async () => {
-                                    try {
-                                      await deleteSession(session.session_id);
-                                      toast.success("Session deleted.");
-                                      router.refresh();
-                                    } catch (e) {
-                                      toast.error(e instanceof Error ? e.message : "Failed.");
-                                    }
+                                  setDeleteTarget({
+                                    id: session.session_id,
+                                    label: session.classLabel,
                                   });
+                                  setDeleteOpen(true);
                                 }}
                               >
                                 Delete
@@ -298,6 +298,54 @@ export function SectionDetailClient({
                   </Table>
                 </div>
               </div>
+
+              <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Delete session?</DialogTitle>
+                  </DialogHeader>
+                  <p className="text-sm text-muted-foreground">
+                    This will permanently delete{" "}
+                    <span className="font-semibold text-foreground">
+                      {deleteTarget?.label ?? "this session"}
+                    </span>{" "}
+                    and all of its attendance records. This action cannot be undone.
+                  </p>
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => {
+                        setDeleteOpen(false);
+                        setDeleteTarget(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      type="button"
+                      disabled={pending || !deleteTarget}
+                      onClick={() => {
+                        if (!deleteTarget) return;
+                        startTransition(async () => {
+                          try {
+                            await deleteSession(deleteTarget.id);
+                            toast.success("Session deleted.");
+                            setDeleteOpen(false);
+                            setDeleteTarget(null);
+                            router.refresh();
+                          } catch (e) {
+                            toast.error(e instanceof Error ? e.message : "Failed.");
+                          }
+                        });
+                      }}
+                    >
+                      {pending ? "Deleting..." : "Delete"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </TabsContent>
 
             <TabsContent value="students" className="pt-4">

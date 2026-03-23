@@ -233,8 +233,17 @@ export async function deleteSession(session_id: number) {
     throw new Error("Not allowed.");
   }
 
-  const { error } = await admin.from("classsession").delete().eq("session_id", session_id);
-  if (error) throw new Error(error.message);
+  const { error: attendanceErr } = await admin
+    .from("attendancerecord")
+    .delete()
+    .eq("session_id", session_id);
+  if (attendanceErr) throw new Error(attendanceErr.message);
+
+  const { error: deleteErr } = await admin
+    .from("classsession")
+    .delete()
+    .eq("session_id", session_id);
+  if (deleteErr) throw new Error(deleteErr.message);
 }
 
 export async function enrollStudent(section_id: number, input: unknown) {
